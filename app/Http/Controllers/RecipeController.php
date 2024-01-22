@@ -31,6 +31,14 @@ class RecipeController extends Controller
    */
   public function index()
   {
+    $recipes = Recipe::select('recipes.id', 'recipes.title', 'recipes.description', 'recipes.created_at', 'recipes.image', 'users.name')
+      // ->where('recipes.deleted_at', null)
+      ->join('users', 'users.id', '=', 'recipes.user_id')
+      ->orderBy('created_at', 'desc')
+      ->get();
+      // dd($recipes);
+
+      return view('recipes.index', compact('recipes'));
   }
 
   /**

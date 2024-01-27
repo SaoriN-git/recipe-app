@@ -64,7 +64,7 @@ class RecipeController extends Controller
 
     $categories = Category::all();
 
-      return view('recipes.index', compact('recipes', 'categories'));
+      return view('recipes.index', compact('recipes', 'categories', 'filters'));
   }
 
   /**

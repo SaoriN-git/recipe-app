@@ -19,3 +19,7 @@ Breadcrumbs::for('index', function (BreadcrumbTrail $trail) {
     $trail->push('レシピ一覧', route('recipe.index'));
 });
 
+Breadcrumbs::for('show', function (BreadcrumbTrail $trail, $recipe) {
+  $trail->parent('index');
+  $trail->push($recipe['title'], route('recipe.show', $recipe['id']));
+});

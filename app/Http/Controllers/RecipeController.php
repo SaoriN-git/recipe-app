@@ -88,36 +88,44 @@ class RecipeController extends Controller
   public function store(Request $request)
   {
     $posts = $request->all();
-    $uuid = Str::uuid();
-    // dd($posts);
-    
-    $image = $request->file('image');
-    //S3に画像をアップロード
-    $path = Storage::disk('s3')->putFile('recipe', $image, 'public');
-    // dd($path);
-    //S3のURLを取得
-    $url = Storage::disk('s3')->url($path);
-    // dd($url);
-    //DBにはURLを保存
-    Recipe::insert([
-      'id' => $uuid,
-      'title' => $posts['title'],
-      'description' => $posts['description'],
-      'category_id' => $posts['category'],
-      'image' => $url,
-      'user_id' => Auth::id()
-    ]);
-    $steps = [];
-    foreach ($posts['steps'] as $key => $step) {
-      $steps[$key] = [
-        'recipe_id' => $uuid,
-        'step_number' => $key + 1,
-        'description' => $step,
-      ];
-    }
-    Step::insert($steps);
-    // dd($steps);
-
+        $uuid = Str::uuid()->toString();
+        // dd($posts);
+        $image = $request->file('image');
+        // s3に画像をアップロード
+        $path = Storage::disk('s3')->putFile('recipe', $image, 'public');
+        // dd($path);
+        // s3のURLを取得
+        $url = Storage::disk('s3')->url($path);
+        // DBにはURLを保存
+        Recipe::insert([
+            'id' => $uuid,
+            'title' => $posts['title'],
+            'description' => $posts['description'],
+            'category_id' => $posts['category'],
+            'image' => $url,
+            'user_id' => Auth::id()
+        ]);
+        // $posts['ingredients'] =$posts['ingredients'][0]['name']
+        // $posts['ingredients'] =$posts['ingredients'][0]['quantity']
+        $ingredients = [];
+        foreach($posts['ingredients'] as $key => $ingredient){
+            $ingredients[$key] = [
+                'recipe_id' => $uuid,
+                'name' => $ingredient['name'],
+                'quantity' => $ingredient['quantity']
+            ];
+        }
+        Ingredient::insert($ingredients);
+        $steps = [];
+        foreach($posts['steps'] as $key => $step){
+            $steps[$key] = [
+                'recipe_id' => $uuid,
+                'step_number' => $key + 1,
+                'description' => $step
+            ];
+        }
+        STEP::insert($steps);
+        // dd($steps);
 
   }
 
@@ -160,4 +168,5 @@ class RecipeController extends Controller
   {
     //
   }
+  
 }

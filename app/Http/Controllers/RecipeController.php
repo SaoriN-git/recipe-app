@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use App\Http\Requests\RecipeCreateRequest;
 use App\Models\Category;
 use App\Models\Ingredient;
 use Illuminate\Http\Request;
 use App\Models\Recipe;
 use App\Models\Step;
-use Illuminate\Support\Facades\DB;
 
 class RecipeController extends Controller
 {
@@ -85,7 +86,7 @@ class RecipeController extends Controller
   /**
    * Store a newly created resource in storage.
    */
-  public function store(Request $request)
+  public function store(RecipeCreateRequest $request)
   {
     $posts = $request->all();
     $uuid = Str::uuid()->toString();

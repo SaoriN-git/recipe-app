@@ -150,10 +150,17 @@ class RecipeController extends Controller
       ->first();
     $recipe_recorde = Recipe::find($id);
     $recipe_recorde->increment('views');
+
+    //レシピの投稿者とログインユーザーが同じかどうか
+    $is_my_recipe = false;
+    if (Auth::check() && (Auth::id() === $recipe['user_id'])) {
+      $is_my_recipe = true;
+    }
+
     //リレーションで材料とステップを取得
     // dd($recipe);
 
-    return view('recipes.show', compact('recipe'));
+    return view('recipes.show', compact('recipe', 'is_my_recipe'));
   }
 
   /**
@@ -161,7 +168,12 @@ class RecipeController extends Controller
    */
   public function edit(string $id)
   {
-    //
+    $recipe = Recipe::with(['ingredients', 'steps', 'reviews.user', 'user'])
+      ->where('recipes.id', $id)
+      ->first();
+    $categories = Category::all();
+
+    return view('recipes.edit', compact('recipe', 'categories'));
   }
 
   /**
@@ -169,7 +181,55 @@ class RecipeController extends Controller
    */
   public function update(Request $request, string $id)
   {
-    //
+    $posts = $request->all();
+    // dd($posts);
+    // 画像の分岐
+    $update_array = [
+      'title' => $posts['title'],
+      'description' => $posts['description'],
+      'category_id' => $posts['category_id']
+    ];
+    if ($request->hasFile('image')) {
+      $image = $request->file('image');
+      // s3に画像をアップロード
+      $path = Storage::disk('s3')->putFile('recipe', $image, 'public');
+      // s3のURLを取得
+      $url = Storage::disk('s3')->url($path);
+      // DBにはURLを保存
+      $update_array['image'] = $url;
+    }
+    try {
+      DB::beginTransaction();
+      Recipe::where('id', $id)->update($update_array);
+      Ingredient::where('recipe_id', $id)->delete();
+      STEP::where('recipe_id', $id)->delete();
+      $ingredients = [];
+      foreach ($posts['ingredients'] as $key => $ingredient) {
+        $ingredients[$key] = [
+          'recipe_id' => $id,
+          'name' => $ingredient['name'],
+          'quantity' => $ingredient['quantity']
+        ];
+      }
+      Ingredient::insert($ingredients);
+      $steps = [];
+      foreach ($posts['steps'] as $key => $step) {
+        $steps[$key] = [
+          'recipe_id' => $id,
+          'step_number' => $key + 1,
+          'description' => $step
+        ];
+      }
+      STEP::insert($steps);
+      DB::commit();
+    } catch (\Throwable $th) {
+      DB::rollBack();
+      \Log::debug(print_r($th->getMessage(), true));
+      throw $th;
+    }
+    flash()->success('レシピを更新しました！');
+
+    return redirect()->route('recipe.show', ['id' => $id]);
   }
 
   /**

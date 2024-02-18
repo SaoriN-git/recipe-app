@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\RecipeCreateRequest;
+use App\Http\Requests\RecipeUpdateRequest;
 use App\Models\Category;
 use App\Models\Ingredient;
 use Illuminate\Http\Request;
@@ -170,7 +171,11 @@ class RecipeController extends Controller
   {
     $recipe = Recipe::with(['ingredients', 'steps', 'reviews.user', 'user'])
       ->where('recipes.id', $id)
-      ->first();
+      ->first()->toArray();
+    if( !Auth::check() || (Auth::id() !== $recipe['user_id']) ) {
+      abort(403);
+    }
+
     $categories = Category::all();
 
     return view('recipes.edit', compact('recipe', 'categories'));
@@ -179,7 +184,7 @@ class RecipeController extends Controller
   /**
    * Update the specified resource in storage.
    */
-  public function update(Request $request, string $id)
+  public function update(RecipeUpdateRequest $request, string $id)
   {
     $posts = $request->all();
     // dd($posts);
@@ -237,6 +242,9 @@ class RecipeController extends Controller
    */
   public function destroy(string $id)
   {
-    //
+    Recipe::where('id', $id)->delete();
+    flash()->warning('レシピを削除しました!');
+
+    return redirect()->route('home');
   }
 }

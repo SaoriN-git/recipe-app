@@ -1,9 +1,11 @@
 <section class="bg-white shadow">
   <div class="container mx-auto flex justify-between items-center">
-    <div class="flex items-center">
+		<a href="{{ route('home') }}">
+    <div class="flex items-center">		
       <img src="/images/logo.png" alt="logo" class="w-16 h-16">
-      <h1 class="text-2xl font-bold text-gray-800">Cook Laravel</h1>
+      <h1 class="text-2xl font-bold text-gray-800">Cook Laravel</h1>	
     </div>
+	</a>
     <form>
       <input type="text" name="keyword"
         class="border border-gray-300 rounded-lg px-3 py-2.5 ml-2 
